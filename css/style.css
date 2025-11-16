@@ -1,0 +1,129 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #121212;
+    color: #ffffff;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background-color: #1db954;
+}
+.header img.logo {
+    height: 60px;
+    margin-right: 1rem;
+}
+
+/* Navbar */
+.navbar {
+    background-color: #181818;
+    padding: 0.5rem 1rem;
+}
+.navbar ul {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+    margin: 5px;
+    padding: 0;
+}
+.navbar a {
+    text-decoration: none;
+    color: #ffffff;
+    font-weight: bold;
+}
+.navbar a:hover {
+    color: #18a94b;
+}
+
+/* Main container */
+.main-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 200px));
+    gap: 1rem;
+    padding: 1rem;
+}
+
+/* Song card */
+.song-card {
+    background-color: #282828;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s;
+}
+.song-card:hover {
+    transform: scale(1.1);
+}
+.song-card img.song-img {
+    width: 100%;
+    max-height: 100%;
+}
+
+.song-info {
+    padding: 0.5rem;
+}
+.song-info h3 {
+    margin: 5px;
+    font-size: 1rem;
+}
+.song-info p {
+    margin: 0.25rem 5px;
+    font-size: 0.9rem;
+    color: #b3b3b3;
+}
+
+.song-title {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    margin: 5px 0;
+}
+.song-title span {
+    display: inline-block;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 100%;
+}
+.song-title.long span {
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+.song-card:hover .song-title.long span {
+    overflow: visible;
+    animation-name: var(--scroll-name);
+    animation-duration: var(--scroll-time);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+}
+
+/* Buttons */
+button {
+    background-color: #128138;
+    color: #ffffff;
+    border: none;
+    padding: 0.3rem 0.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+button:hover {
+    background-color: #18b54f;
+}
+
+.footer {
+    text-align: center;
+    padding: 1rem;
+    background-color: #181818;
+    margin-top: 20px;
+}
