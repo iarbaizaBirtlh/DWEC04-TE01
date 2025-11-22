@@ -13,29 +13,30 @@ export async function getTrackById(id) {
 }
  */
 
-const DEEZER_SEARCH_URL = "https://cors-anywhere.herokuapp.com/https://api.deezer.com/search?q="; // solo si pruebas local, para GH Pages usar proxy propio o JSON temporal
-const DEEZER_TRACK_URL = "https://cors-anywhere.herokuapp.com/https://api.deezer.com/track/"; 
+const DEEZER_URL_SEARCH = "https://api.deezer.com/search?q=";
+const DEEZER_URL_TRACK = "https://api.deezer.com/track/";
 
-// Obtener canciones por término
+// Proxy oficial y gratuito de Deezer para evitar CORS
+const PROXY = "https://cors-anywhere.herokuapp.com/";
+
+async function fetchDeezer(url) {
+    const response = await fetch(PROXY + url);
+
+    if (!response.ok) {
+        throw new Error(`Error en la petición: ${response.status}`);
+    }
+
+    return await response.json();
+}
+
 export async function getTopTracks(term = "pop", limit = 20) {
-    try {
-        const response = await fetch(`${DEEZER_SEARCH_URL}${encodeURIComponent(term)}&limit=${limit}`);
-        const data = await response.json();
-        return data.data || [];
-    } catch (err) {
-        console.error("Error al obtener canciones:", err);
-        return [];
-    }
+    const url = `${DEEZER_URL_SEARCH}${encodeURIComponent(term)}&limit=${limit}`;
+    const data = await fetchDeezer(url);
+    return data.data || [];
 }
 
-// Obtener detalle de canción por id
 export async function getTrackById(id) {
-    try {
-        const response = await fetch(`${DEEZER_TRACK_URL}${id}`);
-        const data = await response.json();
-        return data || null;
-    } catch (err) {
-        console.error("Error al obtener detalle:", err);
-        return null;
-    }
+    const url = `${DEEZER_URL_TRACK}${id}`;
+    return await fetchDeezer(url);
 }
+
