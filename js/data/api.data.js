@@ -13,29 +13,29 @@ export async function getTrackById(id) {
 }
  */
 
-// api.data.js
-const ITUNES_SEARCH = "https://itunes.apple.com/search";
-const ITUNES_LOOKUP = "https://itunes.apple.com/lookup";
+const DEEZER_SEARCH_URL = "https://cors-anywhere.herokuapp.com/https://api.deezer.com/search?q="; // solo si pruebas local, para GH Pages usar proxy propio o JSON temporal
+const DEEZER_TRACK_URL = "https://cors-anywhere.herokuapp.com/https://api.deezer.com/track/"; 
 
-// Proxy público para evitar problemas de CORS
-const PROXY = "https://cors-anywhere.herokuapp.com/";
-
-async function fetchWithProxy(url) {
-    const response = await fetch(PROXY + url);
-    if (!response.ok) throw new Error(`Error en la petición: ${response.status}`);
-    const data = await response.json();
-    return data;
-}
-
+// Obtener canciones por término
 export async function getTopTracks(term = "pop", limit = 20) {
-    const url = `${ITUNES_SEARCH}?term=${encodeURIComponent(term)}&entity=song&limit=${limit}`;
-    const data = await fetchWithProxy(url);
-    return data.results || [];
+    try {
+        const response = await fetch(`${DEEZER_SEARCH_URL}${encodeURIComponent(term)}&limit=${limit}`);
+        const data = await response.json();
+        return data.data || [];
+    } catch (err) {
+        console.error("Error al obtener canciones:", err);
+        return [];
+    }
 }
 
+// Obtener detalle de canción por id
 export async function getTrackById(id) {
-    const url = `${ITUNES_LOOKUP}?id=${id}`;
-    const data = await fetchWithProxy(url);
-    return data.results?.[0] || null;
+    try {
+        const response = await fetch(`${DEEZER_TRACK_URL}${id}`);
+        const data = await response.json();
+        return data || null;
+    } catch (err) {
+        console.error("Error al obtener detalle:", err);
+        return null;
+    }
 }
-
