@@ -7,7 +7,8 @@ export async function getTopTracks(term = "pop",limit = 20) {
 }
 
 export async function getTrackById(id) {
-    const response = await fetch(`${ITUNES_URL}?id=${id}`);
+    const response = await fetch(`https://itunes.apple.com/lookup?id=${id}`);
     const data = await response.json();
-    return data.results[0];
+    return data.results?.[0] || null;
 }
+

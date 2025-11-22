@@ -1,106 +1,75 @@
+/* js/main.js */
 import MusicService from "./service/music.service.js";
+import { formatTime, toggleFavorite, updateFavoriteButtons, detectLongTitles } from "./utils/utils.js";
 
 const main = document.getElementById("detalles-cancion");
 
-async function loadSongs() {
+// Lista de géneros que quieres mostrar
+const GENRES = ["rock", "pop", "metal", "rap", "indie", "reggaeton"];
+
+async function loadHome() {
+    main.innerHTML = '<p style="text-align:center; width:100%;">Cargando tu música...</p>';
+
     try {
-        const songs = await MusicService.getTopSongs("rock", 20);
-        main.innerHTML = '';
-
-        songs.forEach((song, idx) => {
-            const durationMin = Math.floor((song.duration || 0) / 60000);
-            const durationSec = Math.floor(((song.duration || 0) % 60000) / 1000).toString().padStart(2, "0");
-
-            main.innerHTML += `
-                <article class="song-card">
-                    <img src="${song.image}" alt="${song.title}" class="song-img">
-                    <div class="song-info">
-                        <div class="song-title">
-                            <span>${idx + 1}. ${song.title}</span>
-                        </div>
-                        <p>${song.artist}</p>
-                        <p>Duración: ${durationMin}:${durationSec}</p>
-                        <div class="controls">
-                            <button class="btn-detail" data-id="${song.id}">Ver detalles</button>
-                            <button class="btn-fav" data-id="${song.id}">⭐</button>
-                        </div>
-                    </div>
-                </article>
-            `;
+        const promises = GENRES.map(async (genre) => {
+            const songs = await MusicService.getTopSongs(genre, 10);
+            return { genre, songs };
         });
-
+        const results = await Promise.all(promises);
+        main.innerHTML = "";
+        results.forEach(({ genre, songs }) => {
+            renderGenreSection(genre, songs);
+        });
         detectLongTitles();
         updateFavoriteButtons();
-
-        main.addEventListener("click", (e) => {
-            if (e.target.classList.contains("btn-detail")) {
-                window.location.href = `detalle.html?id=${e.target.dataset.id}`;
-            }
-            if (e.target.classList.contains("btn-fav")) {
-                toggleFavorite(e.target.dataset.id);
-            }
-        });
-    } catch(err) {
-        main.innerHTML = `<p>Error cargando canciones: ${err.message}</p>`;
+    } catch (error) {
+        console.error("Error cargando canciones:", error);
+        main.innerHTML = '<p style="color:red; text-align:center;">Error al cargar la música. Intenta recargar.</p>';
     }
 }
 
-function detectLongTitles() {
-    const titles = document.querySelectorAll(".song-title span");
+function renderGenreSection(genre, songs) {
+    if (!songs || songs.length === 0)
+        return;
+    const section = document.createElement("section");
+    section.className = "genre-section";
+    const title = document.createElement("h2");
+    title.textContent = genre.toUpperCase();
+    section.appendChild(title);
+    const carousel = document.createElement("div");
+    carousel.className = "carousel";
+    let cardsHTML = "";
 
-    titles.forEach((span, index) => {
-        const parent = span.parentElement;
-        const fullWidth = span.scrollWidth;
-        const visibleWidth = parent.clientWidth;
-
-        if (fullWidth > visibleWidth) {
-            parent.classList.add("long");
-            const distance = fullWidth - visibleWidth;
-            const scrollTime = (distance / 20).toFixed(1) + "s";
-            const animName = `marquee-${index}`;
-            const style = document.createElement("style");
-
-            style.innerHTML = `
-                @keyframes ${animName} {
-                    0% { transform: translateX(0); }
-                    40% { transform: translateX(-${distance}px); }
-                    60% { transform: translateX(-${distance}px); }
-                    100% { transform: translateX(-${distance}px); }
-                }
-            `;
-            document.head.appendChild(style);
-            span.style.setProperty("--scroll-name", animName);
-            span.style.setProperty("--scroll-time", scrollTime);
-        }
+    songs.forEach((song, idx) => {
+        const duration = formatTime(song.duration);
+        cardsHTML += `
+        <article class="song-card">
+            <img src="${song.image}" alt="${song.title}" class="song-img">
+            <div class="song-info">
+                <div class="song-title"><span>${idx + 1}. ${song.title}</span></div>
+                <p>${song.artist}</p>
+                <p>⏱ ${duration}</p>
+                <div class="controls">
+                    <button class="btn-detail" data-id="${song.id}">Ver detalles</button>
+                    <button class="btn-fav" data-id="${song.id}">⭐</button>
+                </div>
+            </div>
+        </article>
+        `;
     });
+    carousel.innerHTML = cardsHTML;
+    section.appendChild(carousel);
+    main.appendChild(section);
 }
 
-function toggleFavorite(id) {
-    let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
-    
-    if (!favorites.includes(id)) {
-        favorites.push(id);
-    } else {
-        favorites = favorites.filter(f => f !== id);
+main.addEventListener("click", (e) => {
+    if (e.target.classList.contains("btn-detail")) {
+        window.location.href = `detalle.html?id=${e.target.dataset.id}`;
     }
+    if (e.target.classList.contains("btn-fav")) {
+        toggleFavorite(e.target.dataset.id);
+        updateFavoriteButtons();
+    }
+});
 
-    localStorage.setItem("favorites", JSON.stringify(favorites));
-    updateFavoriteButtons(); // Actualiza visualmente los botones
-}
-
-function updateFavoriteButtons() {
-    const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
-
-    document.querySelectorAll(".btn-fav").forEach(btn => {
-        if (favorites.includes(btn.dataset.id)) {
-            btn.style.backgroundColor = "#09e0f4ff"; // verde Spotify
-            btn.style.color = "#fff"; // texto blanco
-        } else {
-            btn.style.backgroundColor = "#128138"; // gris oscuro original
-            btn.style.color = "#fff"; // texto blanco
-        }
-    });
-}
-
-
-loadSongs();
+loadHome();
