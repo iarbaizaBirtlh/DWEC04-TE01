@@ -1,25 +1,32 @@
-/* import MusicService from "./service/music.service.js";
-import { renderCarousel } from "./ui/home-carousel.js";
+/* js/main.js */
+import MusicService from "./service/music.service.js";
+import { formatTime, toggleFavorite, updateFavoriteButtons, detectLongTitles } from "./utils/utils.js";
 
-const genres = ["rock", "pop", "rap", "metal", "indie", "reggaeton"];
+const main = document.getElementById("detalles-cancion");
 
-document.addEventListener("DOMContentLoaded", loadHome);
+// Lista de géneros que quieres mostrar
+const GENRES = ["rock", "pop", "metal", "rap", "indie", "reggaeton"];
 
 async function loadHome() {
+    main.innerHTML = '<p style="text-align:center; width:100%;">Cargando tu música...</p>';
+
     try {
-        const results = await Promise.all(
-            genres.map(g => MusicService.getTopSongs(g, 10))
-        );
-
-        genres.forEach((genre, index) => {
-            renderCarousel(genre, results[index]);
+        const promises = GENRES.map(async (genre) => {
+            const songs = await MusicService.getTopSongs(genre, 10);
+            return { genre, songs };
         });
-
-    } catch (err) {
-        console.error("Error cargando canciones:", err);
+        const results = await Promise.all(promises);
+        main.innerHTML = "";
+        results.forEach(({ genre, songs }) => {
+            renderGenreSection(genre, songs);
+        });
+        detectLongTitles();
+        updateFavoriteButtons();
+    } catch (error) {
+        console.error("Error cargando canciones:", error);
+        main.innerHTML = '<p style="color:red; text-align:center;">Error al cargar la música. Intenta recargar.</p>';
     }
 }
-
 
 function renderGenreSection(genre, songs) {
     if (!songs || songs.length === 0)
@@ -65,43 +72,4 @@ main.addEventListener("click", (e) => {
     }
 });
 
-loadHome(); */
-
-import MusicService from "./service/music.service.js";
-
-async function loadHome() {
-    try {
-        const [rock, pop, metal, rap, indie] = await Promise.all([
-            MusicService.getTopSongs("rock"),
-            MusicService.getTopSongs("pop"),
-            MusicService.getTopSongs("metal"),
-            MusicService.getTopSongs("rap"),
-            MusicService.getTopSongs("indie")
-        ]);
-
-        renderCarousel("rock", rock);
-        renderCarousel("pop", pop);
-        renderCarousel("metal", metal);
-        renderCarousel("rap", rap);
-        renderCarousel("indie", indie);
-
-    } catch (err) {
-        console.error("Error cargando canciones:", err);
-    }
-}
-
-function renderCarousel(id, list) {
-    const cont = document.getElementById(`carousel-${id}`);
-    if (!cont) return;
-
-    cont.innerHTML = list.map(s => `
-        <div class="card" onclick="location.href='detalle.html?id=${s.id}'">
-            <img src="${s.image}">
-            <h4>${s.title}</h4>
-            <p>${s.artist}</p>
-        </div>
-    `).join("");
-}
-
 loadHome();
-
