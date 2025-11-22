@@ -13,30 +13,47 @@ export async function getTrackById(id) {
 }
  */
 
-const DEEZER_URL_SEARCH = "https://api.deezer.com/search?q=";
-const DEEZER_URL_TRACK = "https://api.deezer.com/track/";
+const API_KEY = "415d613f6e05e55eec1cd9aa99744f7e";
+const BASE_URL = "https://ws.audioscrobbler.com/2.0/";
 
-// Proxy oficial y gratuito de Deezer para evitar CORS
-const PROXY = "https://cors-anywhere.herokuapp.com/";
+export async function getTopTracks(genre = "rock", limit = 10) {
+    const url = `${BASE_URL}?method=tag.gettoptracks&tag=${genre}&api_key=${API_KEY}&format=json&limit=${limit}`;
 
-async function fetchDeezer(url) {
-    const response = await fetch(PROXY + url);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Error al obtener tracks");
 
-    if (!response.ok) {
-        throw new Error(`Error en la petición: ${response.status}`);
-    }
+    const data = await res.json();
 
-    return await response.json();
+    // Normalización para que encaje con tu modelo
+    return data.tracks.track.map(t => ({
+        id: t.mbid || t.url,                          // Last.fm no tiene ID real
+        title: t.name,
+        artist: t.artist.name,
+        album: t.album?.title || "—",
+        image: t.image?.[2]?.["#text"] || "img/default.jpg",
+        duration: 180000,                            // No existe en Last.fm → valor estándar
+        preview: null                                // No hay audio preview
+    }));
 }
 
-export async function getTopTracks(term = "pop", limit = 20) {
-    const url = `${DEEZER_URL_SEARCH}${encodeURIComponent(term)}&limit=${limit}`;
-    const data = await fetchDeezer(url);
-    return data.data || [];
+export async function getTrackByInfo(artist, title) {
+    const url = `${BASE_URL}?method=track.getInfo&api_key=${API_KEY}&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(title)}&format=json`;
+
+    const res = await fetch(url);
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    if (!data.track) return null;
+
+    return {
+        id: data.track.mbid || data.track.url,
+        title: data.track.name,
+        artist: data.track.artist.name,
+        album: data.track.album?.title || "—",
+        image: data.track.album?.image?.[2]?.["#text"] || "img/default.jpg",
+        duration: 180000,
+        preview: null
+    };
 }
 
-export async function getTrackById(id) {
-    const url = `${DEEZER_URL_TRACK}${id}`;
-    return await fetchDeezer(url);
-}
 

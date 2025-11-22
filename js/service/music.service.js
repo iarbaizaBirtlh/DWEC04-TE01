@@ -33,36 +33,35 @@ const MusicService = {
 
 export default MusicService; */
 
-import { getTopTracks, getTrackById } from "../data/api.data.js";
-import { Song } from "../model/song.model.js";
+import { getTopTracks, getTrackByInfo } from "../data/api.data.js";
 
-export const MusicService = {
-    async getTopSongs(term) {
-        const raw = await getTopTracks(term, 10);
+export default {
+    async getTopSongs(genre, limit = 10) {
+        const songs = await getTopTracks(genre, limit);
 
-        return raw.map(song => new Song(
-            song.id,
-            song.title,
-            song.artist.name,
-            song.album.title,
-            song.preview,
-            song.album.cover_medium,
-            song.duration * 1000
-        ));
+        // Guardamos en localStorage para poder acceder después desde detalle
+        const cached = JSON.parse(localStorage.getItem("cached_tracks") || "[]");
+        const merged = [...cached, ...songs];
+
+        // Evitar duplicados
+        const unique = merged.filter((s, i, arr) =>
+            arr.findIndex(x => x.id === s.id) === i
+        );
+
+        localStorage.setItem("cached_tracks", JSON.stringify(unique));
+
+        return songs;
     },
 
     async getSongDetail(id) {
-        const song = await getTrackById(id);
+        const cached = JSON.parse(localStorage.getItem("cached_tracks") || "[]");
+        const base = cached.find(s => s.id === id);
+        if (!base) return null;
 
-        return new Song(
-            song.id,
-            song.title,
-            song.artist.name,
-            song.album.title,
-            song.preview,
-            song.album.cover_medium,
-            song.duration * 1000
-        );
+        const detailed = await getTrackByInfo(base.artist, base.title);
+        return detailed || base;
     }
 };
+
+
 
