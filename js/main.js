@@ -1,10 +1,8 @@
-/* js/main.js */
 import MusicService from "./service/music.service.js";
 import { formatTime, toggleFavorite, updateFavoriteButtons, detectLongTitles } from "./utils/utils.js";
 
 const main = document.getElementById("detalles-cancion");
 
-// Lista de géneros que quieres mostrar
 const GENRES = ["rock", "pop", "metal", "rap", "indie", "reggaeton"];
 
 async function loadHome() {
